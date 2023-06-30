@@ -1,6 +1,6 @@
 {-# LANGUAGE TypeSynonymInstances, FlexibleInstances #-}
 
-import ExprT
+import ExprT ( ExprT(..) )
 import Parser
 import StackVM
 
@@ -26,9 +26,9 @@ class Expr a where
     mul :: a -> a -> a
 
 instance Expr ExprT where
-    lit exp1      = ExprT.Lit exp1
-    add exp1 exp2 = ExprT.Add exp1 exp2
-    mul exp1 exp2 = ExprT.Mul exp1 exp2
+    lit = ExprT.Lit
+    add = ExprT.Add
+    mul = ExprT.Mul
 
 
 -- EXERCISE 4
@@ -87,15 +87,24 @@ data VarExprT = Lit Integer
   deriving (Show, Eq)
 
 instance Expr VarExprT where
-    lit exp1      = Main.Lit exp1
-    add exp1 exp2 = Main.Add exp1 exp2
-    mul exp1 exp2 = Main.Mul exp1 exp2
+    lit = Main.Lit
+    add = Main.Add
+    mul = Main.Mul
 
 instance HasVars VarExprT where
-    var s = Var s
+    var = Var
 
 instance HasVars (M.Map String Integer -> Maybe Integer) where
-    var s = 
+    var = M.lookup
 
 instance Expr (M.Map String Integer -> Maybe Integer) where
+    lit n _             = Just n
+    add var0 var1 map0 = do int0 <- var0 map0
+                            int1 <- var1 map0
+                            return (int0 + int1)
+    mul var0 var1 map0 = do int0 <- var0 map0
+                            int1 <- var1 map0
+                            return (int0 * int1)
 
+withVars :: [(String, Integer)] -> (M.Map String Integer -> Maybe Integer) -> Maybe Integer
+withVars vs exp = exp $ M.fromList vs
